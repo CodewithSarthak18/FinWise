@@ -41,12 +41,14 @@ Configure these variables in your server's `.env` file (copied from `.env.exampl
 | :--- | :---: | :--- | :--- | :--- |
 | `SPRING_PROFILES_ACTIVE` | Yes | `prod` | Activates production profile with strict JPA validation and logging | *Static value* (`prod`) |
 | `PORT` | Yes | `8080` | Internal HTTP port for the Spring Boot backend service | *Static value* (`8080`) |
-| `DB_HOST` | Yes | `mysql` | MySQL hostname or Docker service name | *Static value* (`mysql` or IP) |
-| `DB_PORT` | Yes | `3306` | MySQL port | *Static value* (`3306`) |
-| `DB_NAME` | Yes | `finwise_db` | Production database schema name | *Static value* (`finwise_db`) |
-| `DB_USERNAME` | Yes | `finwise_user` | Dedicated non-root database user | *Static value* (`finwise_user`) |
-| `DB_PASSWORD` | Yes | *(None)* | Strong database user password | `openssl rand -base64 24` |
-| `MYSQL_ROOT_PASSWORD` | Yes | *(None)* | MySQL root administration password (for container init) | `openssl rand -base64 24` |
+| `DB_HOST` | Yes | `mysql` | MySQL hostname (e.g., Aiven `mysql-xxxx-yourorg.aivencloud.com`) | *Static value* |
+| `DB_PORT` | Yes | `3306` | MySQL port (e.g., Aiven `25060` or default `3306`) | *Static integer* |
+| `DB_NAME` | Yes | `finwise_db` | Database name (e.g., Aiven `defaultdb` or `finwise_db`) | *Static value* |
+| `DB_USERNAME` | Yes | `finwise_user` | Database user (e.g., Aiven `avnadmin` or dedicated user) | *Static value* |
+| `DB_PASSWORD` | Yes | *(None)* | Strong database password (copied securely from Aiven console) | Managed in DB console |
+| `DB_SSL_MODE` | No | `REQUIRED` | SSL mode for MySQL JDBC (`REQUIRED`, `VERIFY_CA`, `VERIFY_IDENTITY`) | *Static value* (`REQUIRED`) |
+| `DB_JDBC_URL` | No | *(Auto-built)* | Optional full JDBC URL override (if not using individual DB_* variables) | *Static value* |
+| `MYSQL_ROOT_PASSWORD` | No | *(None)* | MySQL root password (used only for local Docker MySQL container) | `openssl rand -base64 24` |
 | `JWT_SECRET` | Yes | *(None)* | High-entropy 256/384/512-bit HMAC key (min 64 hex chars) | `openssl rand -hex 64` |
 | `JWT_ACCESS_EXPIRATION_MS` | No | `900000` | Access token lifespan in milliseconds (15 minutes) | *Static integer* |
 | `JWT_REFRESH_EXPIRATION_MS`| No | `604800000` | Refresh token lifespan in milliseconds (7 days) | *Static integer* |
@@ -60,9 +62,59 @@ Configure these variables in your server's `.env` file (copied from `.env.exampl
 
 ---
 
-## 3. Production MySQL Database Provisioning
+## 3. Production MySQL Database Provisioning & Aiven Hosted MySQL Setup
 
-If using a managed database (AWS RDS, DigitalOcean Managed Database) or manual host MySQL installation, execute these SQL initialization commands:
+FinWise supports cloud-hosted managed databases like **Aiven for MySQL**, AWS RDS, and Azure Database for MySQL, as well as containerized MySQL instances.
+
+### 3.1. Aiven for MySQL Setup & Connection Guide
+
+Aiven provides managed, highly available MySQL clusters with mandatory SSL/TLS encryption.
+
+#### Step 1: Obtain Connection Details from Aiven Console
+1. Log in to [Aiven Console](https://console.aiven.io/).
+2. Navigate to your **MySQL Service Overview** page.
+3. Under **Connection information**, identify:
+   - **Host**: e.g., `mysql-xxxx-yourorg.aivencloud.com`
+   - **Port**: e.g., `25060` (or your assigned service port)
+   - **User**: e.g., `avnadmin`
+   - **Password**: Copy your secret password (never commit this)
+   - **Database Name**: `defaultdb` (or create a dedicated database named `finwise_db` in the **Databases** tab)
+   - **Access**: Ensure public access is allowed or configure IP filter rules for your application server's static IP.
+
+#### Step 2: Configure Environment Variables in `.env`
+Set the database parameters in your production `.env` file:
+```bash
+# Aiven MySQL Connection Parameters
+DB_HOST=mysql-xxxx-yourorg.aivencloud.com
+DB_PORT=25060
+DB_NAME=defaultdb
+DB_USERNAME=avnadmin
+DB_PASSWORD=your_aiven_password_here
+DB_SSL_MODE=REQUIRED
+```
+
+The Spring Boot backend automatically constructs the compliant JDBC URL:
+```text
+jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}?sslMode=${DB_SSL_MODE:REQUIRED}&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8
+```
+
+#### Step 3: SSL/TLS Encryption Modes
+Aiven strictly **requires** encrypted SSL/TLS connections:
+- **`sslMode=REQUIRED` (Default & Recommended)**: Enforces end-to-end TLS encryption on all data transmitted between FinWise and Aiven MySQL.
+- **`sslMode=VERIFY_IDENTITY` or `sslMode=VERIFY_CA` (Strict CA Certificate Verification)**:
+  If your organization requires certificate authority verification against Aiven's Project CA:
+  1. Download `ca.pem` from the Aiven MySQL Service Overview page.
+  2. Import `ca.pem` into a Java keystore:
+     ```bash
+     keytool -importcert -alias aiven -file ca.pem -keystore aiven-truststore.jks -storepass changeit -noprompt
+     ```
+  3. Supply JVM truststore flags or append to `DB_JDBC_URL`:
+     ```text
+     &sslMode=VERIFY_IDENTITY&trustCertificateKeyStoreUrl=file:/path/to/aiven-truststore.jks&trustCertificateKeyStorePassword=changeit
+     ```
+
+### 3.2. Manual MySQL Host / Self-Hosted Provisioning
+If using a self-hosted MySQL instance instead of Aiven:
 
 ```sql
 -- 1. Create database with full Unicode & Emoji support
@@ -81,7 +133,7 @@ GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, REFERENCES, INDEX, ALTER, LO
 FLUSH PRIVILEGES;
 ```
 
-### Production InnoDB Engine Tuning (`docker/mysql/my.cnf`):
+### 3.3. Production InnoDB Engine Tuning (`docker/mysql/my.cnf`):
 - `innodb_buffer_pool_size = 512M` (or 50-70% of available RAM on dedicated DB hosts).
 - `innodb_flush_log_at_trx_commit = 1` for absolute financial transaction ACID durability.
 - `sql_mode = STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION`.
@@ -96,14 +148,24 @@ FinWise uses version-controlled Flyway database migrations (`src/main/resources/
 - `V2__seed_categories.sql`: Seeds system categories (`is_system = true`).
 - `V3__sample_dev_data.sql`: Development seed data (skipped if schema is already baselined).
 
-### Automatic Migration on Startup:
-The Spring Boot backend has Flyway auto-migration enabled:
+### Automatic Migration & Cloud Resilience on Startup:
+The Spring Boot backend has Flyway auto-migration configured with cloud-resilient safeguards:
 ```yaml
-spring.flyway.enabled: true
-spring.flyway.baseline-on-migrate: true
-spring.flyway.baseline-version: 0
+spring.flyway:
+  enabled: true
+  baseline-on-migrate: true
+  baseline-version: 0
+  validate-on-migrate: true
+  clean-disabled: true       # Prevents accidental deletion of production tables
+  connect-retries: 5         # Handles cloud database connection handshakes
+  connect-retries-interval: 3 # Waits 3 seconds between retries
 ```
-On startup, the backend automatically applies any pending migrations before accepting incoming traffic.
+On startup, the backend automatically validates applied migrations and executes any pending migration scripts before accepting incoming API traffic.
+
+### Database Health Probes:
+The health of the database connection (including TLS handshakes) is verified continuously through:
+- **Application Health Endpoint**: `GET /api/v1/health` (executes JDBC `isValid(2)` probe and reports database product name, version, and status).
+- **Spring Actuator Probes**: `GET /actuator/health/readiness` and `GET /actuator/health/liveness` (reports database component state for container orchestrators).
 
 ### Manual Migration Verification (Optional):
 You can check migration history directly in MySQL:

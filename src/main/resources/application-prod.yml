@@ -17,9 +17,9 @@ spring:
   application:
     name: finwise-backend
 
-  # Production MySQL Data Source
+  # Production MySQL Data Source (Configured for Aiven & Cloud Hosted MySQL with TLS/SSL)
   datasource:
-    url: jdbc:mysql://${DB_HOST:mysql}:${DB_PORT:3306}/${DB_NAME:finwise_db}?useSSL=${DB_USE_SSL:true}&requireSSL=${DB_REQUIRE_SSL:false}&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8
+    url: ${DB_JDBC_URL:jdbc:mysql://${DB_HOST}:${DB_PORT:3306}/${DB_NAME:defaultdb}?sslMode=${DB_SSL_MODE:REQUIRED}&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -32,6 +32,7 @@ spring:
       max-lifetime: 1200000
       leak-detection-threshold: 60000
       validation-timeout: 5000
+      connection-test-query: SELECT 1
 
   # Production JPA / Hibernate (Strict Schema Validation)
   jpa:
@@ -48,11 +49,15 @@ spring:
     show-sql: false
     open-in-view: false
 
-  # Flyway Database Migrations
+  # Flyway Database Migrations (Safe Cloud & Production Startup)
   flyway:
     enabled: true
     baseline-on-migrate: true
     baseline-version: 0
+    validate-on-migrate: true
+    clean-disabled: true # Critical safeguard: Prevents destructive drops in production
+    connect-retries: 5   # Retries connection during cloud database cold-starts
+    connect-retries-interval: 3 # Wait 3 seconds between retries
     locations: classpath:db/migration
 
 # FinWise Domain Security, Scheduler & CORS
