@@ -1,0 +1,109 @@
+# ==============================================================================
+# Git Ignore Configuration for FinWise Personal Finance Manager
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. Environment & Sensitive Secrets (CRITICAL: NEVER COMMIT)
+# ------------------------------------------------------------------------------
+.env
+.env.*
+!*.env.example
+!*.example
+*.env
+*.secrets
+*.credential
+*.credentials
+credentials.json
+secrets.yml
+secrets.yaml
+
+# ------------------------------------------------------------------------------
+# 2. SSL / TLS Certificates, Private Keys & Keystores
+# ------------------------------------------------------------------------------
+*.pem
+*.key
+*.crt
+*.cer
+*.der
+*.pfx
+*.p12
+*.jks
+*.keystore
+certbot/
+letsencrypt/
+
+# ------------------------------------------------------------------------------
+# 3. Compiled Binaries & Build Target Directories
+# ------------------------------------------------------------------------------
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+!tools/maven/**/*.jar
+
+# ------------------------------------------------------------------------------
+# 4. Frontend Build & Node Dependencies
+# ------------------------------------------------------------------------------
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/build/
+frontend/coverage/
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/.pnpm-debug.log*
+
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ------------------------------------------------------------------------------
+# 5. Application Runtime Logs
+# ------------------------------------------------------------------------------
+logs/
+*.log
+*.log.*
+*.log.gz
+nohup.out
+
+# ------------------------------------------------------------------------------
+# 6. Database Dumps & Local Backup Archives
+# ------------------------------------------------------------------------------
+backups/
+*.sql
+*.sql.gz
+*.dump
+*.rdb
+!src/main/resources/db/migration/*.sql
+
+# ------------------------------------------------------------------------------
+# 7. IDE & Editor Configuration
+# ------------------------------------------------------------------------------
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+*.sublime-project
+*.sublime-workspace
+.project
+.classpath
+.settings/
+.factorypath
+
+# ------------------------------------------------------------------------------
+# 8. OS-Specific System Files
+# ------------------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+[Dd]esktop.ini

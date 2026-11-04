@@ -1,0 +1,61 @@
+# ==============================================================================
+# FinWise Production Override Compose (HTTPS + SSL Termination + Certbot)
+# ==============================================================================
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+# ==============================================================================
+
+services:
+  # In production, do not expose backend and database ports directly to host
+  mysql:
+    ports: [] # internal only
+
+  backend:
+    ports: [] # internal only
+
+  frontend:
+    ports: [] # routed through SSL reverse proxy
+
+  # Production SSL Termination Reverse Proxy
+  proxy:
+    image: nginx:1.27-alpine
+    container_name: finwise-ssl-proxy
+    restart: unless-stopped
+    depends_on:
+      frontend:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN_NAME: ${DOMAIN_NAME:-finwise.yourdomain.com}
+    volumes:
+      - ./docker/nginx/production-https.conf:/etc/nginx/templates/default.conf.template:ro
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+      - certbot-www:/var/www/certbot
+    networks:
+      - finwise-network
+
+  # Certbot Automated SSL Certificate Renewer
+  certbot:
+    image: certbot/certbot:v3.0.0
+    container_name: finwise-certbot
+    restart: unless-stopped
+    volumes:
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/lib/letsencrypt
+      - certbot-www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h & wait $${!}; done;'"
+    networks:
+      - finwise-network
+
+volumes:
+  certbot-etc:
+    name: finwise-certbot-etc
+  certbot-var:
+    name: finwise-certbot-var
+  certbot-www:
+    name: finwise-certbot-www

@@ -1,0 +1,121 @@
+# ==============================================================================
+# FinWise Application - Docker Compose Stack
+# ==============================================================================
+# To start the entire system:
+#   docker compose up -d --build
+#
+# Services exposed:
+#   - Frontend (React + Nginx): http://localhost:80
+#   - Backend (Spring Boot API): http://localhost:8080 (internal / optional port map)
+#   - Database (MySQL 8.0): localhost:3306 (internal / persistent volume)
+# ==============================================================================
+
+services:
+  # ----------------------------------------------------------------------------
+  # 1. Database Tier: MySQL 8.0
+  # ----------------------------------------------------------------------------
+  mysql:
+    image: mysql:8.0
+    container_name: finwise-mysql
+    restart: unless-stopped
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-finwise_root_secure_2026}
+      MYSQL_DATABASE: ${DB_NAME:-finwise_db}
+      MYSQL_USER: ${DB_USERNAME:-finwise_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-finwise_pass_2026}
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./docker/mysql/my.cnf:/etc/mysql/conf.d/my.cnf:ro
+      - ./backups:/backups
+    ports:
+      - "3306:3306"
+    networks:
+      - finwise-network
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u$$MYSQL_USER -p$$MYSQL_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ----------------------------------------------------------------------------
+  # 2. Application Tier: Spring Boot 3 + Java 21 Backend
+  # ----------------------------------------------------------------------------
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: finwise-backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
+      PORT: 8080
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME:-finwise_db}
+      DB_USERNAME: ${DB_USERNAME:-finwise_user}
+      DB_PASSWORD: ${DB_PASSWORD:-finwise_pass_2026}
+      DB_USE_SSL: "false"
+      JWT_SECRET: ${JWT_SECRET:-4c9e6679b42540de944be07fc1f90ae7d825a09b3c41ef58d629a8c17b5f210a56f085347201bc4d9e5f1b6a782c9e}
+      JWT_ACCESS_EXPIRATION_MS: ${JWT_ACCESS_EXPIRATION_MS:-900000}
+      JWT_REFRESH_EXPIRATION_MS: ${JWT_REFRESH_EXPIRATION_MS:-604800000}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost,http://localhost:80,http://localhost:5173,http://127.0.0.1:5173}
+      SCHEDULER_ENABLED: "true"
+      LOG_LEVEL_ROOT: "INFO"
+      LOG_LEVEL_FINWISE: "INFO"
+    volumes:
+      - app-logs:/var/log/finwise
+    ports:
+      - "8080:8080"
+    networks:
+      - finwise-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health/readiness || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 4
+      start_period: 40s
+
+  # ----------------------------------------------------------------------------
+  # 3. Presentation Tier: React + Nginx Reverse Proxy
+  # ----------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: finwise-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "80:80"
+    networks:
+      - finwise-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+# ------------------------------------------------------------------------------
+# Volumes & Networks Definition
+# ------------------------------------------------------------------------------
+volumes:
+  mysql-data:
+    name: finwise-mysql-data
+  app-logs:
+    name: finwise-app-logs
+
+networks:
+  finwise-network:
+    name: finwise-network
+    driver: bridge
