@@ -23,7 +23,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(() => {
     const saved = localStorage.getItem('finwise_user');
-    if (saved) {
+    if (saved && saved !== 'undefined' && saved !== 'null') {
       try {
         return JSON.parse(saved);
       } catch {
@@ -70,8 +70,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const authData = await authApi.login(credentials);
       localStorage.setItem('finwise_access_token', authData.accessToken);
       localStorage.setItem('finwise_refresh_token', authData.refreshToken);
-      localStorage.setItem('finwise_user', JSON.stringify(authData.user));
-      setUser(authData.user);
+      if (authData.user) {
+        localStorage.setItem('finwise_user', JSON.stringify(authData.user));
+        setUser(authData.user);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -89,8 +91,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const authData = await authApi.register(data);
       localStorage.setItem('finwise_access_token', authData.accessToken);
       localStorage.setItem('finwise_refresh_token', authData.refreshToken);
-      localStorage.setItem('finwise_user', JSON.stringify(authData.user));
-      setUser(authData.user);
+      if (authData.user) {
+        localStorage.setItem('finwise_user', JSON.stringify(authData.user));
+        setUser(authData.user);
+      }
     } finally {
       setIsLoading(false);
     }
