@@ -55,7 +55,11 @@ export const RegisterPage: React.FC = () => {
         errorMsg = Object.values(resp.validationErrors).join(', ');
       }
       if (!errorMsg) {
-        errorMsg = err?.message || 'Registration failed. Please check your inputs.';
+        if (err?.code === 'ECONNABORTED' || err?.message?.includes('timeout')) {
+          errorMsg = 'Request timed out due to high network latency. Your account may have already been created—please try signing in.';
+        } else {
+          errorMsg = err?.message || 'Registration failed. Please check your inputs.';
+        }
       }
       setError(errorMsg);
       showToast(errorMsg, 'error');

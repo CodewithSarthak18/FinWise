@@ -26,7 +26,14 @@ export const LoginPage: React.FC = () => {
       showToast('Welcome back to FinWise!', 'success');
       navigate('/dashboard');
     } catch (err: any) {
-      const serverMsg = err?.response?.data?.message || 'Invalid email or password. Please try again.';
+      let serverMsg = err?.response?.data?.message;
+      if (!serverMsg) {
+        if (err?.code === 'ECONNABORTED' || err?.message?.includes('timeout')) {
+          serverMsg = 'Connection timed out. The server might be waking up—please try again in a few moments.';
+        } else {
+          serverMsg = 'Invalid email or password. Please try again.';
+        }
+      }
       setError(serverMsg);
       showToast(serverMsg, 'error');
     } finally {
