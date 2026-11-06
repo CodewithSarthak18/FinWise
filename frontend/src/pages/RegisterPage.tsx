@@ -48,9 +48,17 @@ export const RegisterPage: React.FC = () => {
       });
       showToast('Account created successfully! Welcome to FinWise.', 'success');
       navigate('/dashboard');
-    } catch {
-      setError('Registration failed. Please check your inputs or try demo credentials.');
-      showToast('Registration failed', 'error');
+    } catch (err: any) {
+      const resp = err?.response?.data;
+      let errorMsg = resp?.message;
+      if (resp?.validationErrors) {
+        errorMsg = Object.values(resp.validationErrors).join(', ');
+      }
+      if (!errorMsg) {
+        errorMsg = err?.message || 'Registration failed. Please check your inputs.';
+      }
+      setError(errorMsg);
+      showToast(errorMsg, 'error');
     } finally {
       setIsLoading(false);
     }

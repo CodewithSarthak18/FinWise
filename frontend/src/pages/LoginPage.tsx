@@ -25,9 +25,10 @@ export const LoginPage: React.FC = () => {
       await login({ email, password });
       showToast('Welcome back to FinWise!', 'success');
       navigate('/dashboard');
-    } catch {
-      setError('Invalid credentials or backend unavailable. Use the demo button below.');
-      showToast('Authentication failed', 'error');
+    } catch (err: any) {
+      const serverMsg = err?.response?.data?.message || 'Invalid email or password. Please try again.';
+      setError(serverMsg);
+      showToast(serverMsg, 'error');
     } finally {
       setIsLoading(false);
     }
