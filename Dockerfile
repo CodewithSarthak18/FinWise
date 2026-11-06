@@ -1,8 +1,18 @@
 # ==============================================================================
-# Multi-Stage Dockerfile for FinWise Backend (Java 21 + Spring Boot 3)
+# Multi-Stage Dockerfile for FinWise Fullstack Application (React + Spring Boot)
 # ==============================================================================
 
-# Stage 1: Build Application with Maven
+# Stage 1: Build React Frontend
+FROM node:20-alpine AS frontend-builder
+WORKDIR /frontend
+
+COPY frontend/package*.json ./
+RUN npm ci
+
+COPY frontend/ ./
+RUN npm run build
+
+# Stage 2: Build Application with Maven & Embedded Static Frontend
 FROM maven:3.9.9-eclipse-temurin-21-alpine AS builder
 
 WORKDIR /build
@@ -11,11 +21,13 @@ WORKDIR /build
 COPY pom.xml .
 RUN mvn dependency:go-offline -B || true
 
-# Copy source code and build production executable JAR
+# Copy source code and embed compiled frontend assets
 COPY src ./src
+COPY --from=frontend-builder /frontend/dist ./src/main/resources/static
+
 RUN mvn clean package -DskipTests -B
 
-# Stage 2: Minimal Distroless/Alpine Production Runtime
+# Stage 3: Minimal Distroless/Alpine Production Runtime
 FROM eclipse-temurin:21-jre-alpine AS runner
 
 WORKDIR /app
