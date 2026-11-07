@@ -30,12 +30,19 @@ export const TransferModal: React.FC<TransferModalProps> = ({ isOpen, onClose, o
   useEffect(() => {
     if (isOpen) {
       accountsApi.getAccounts().then((accs) => {
-        setAccounts(accs);
-        if (accs.length >= 2) {
+        const safeAccs = Array.isArray(accs) ? accs : [];
+        setAccounts(safeAccs);
+        if (safeAccs.length >= 2) {
           setFormData((prev) => ({
             ...prev,
-            fromAccountId: String(accs[0].id),
-            toAccountId: String(accs[1].id),
+            fromAccountId: safeAccs.some(a => String(a.id) === prev.fromAccountId) ? prev.fromAccountId : String(safeAccs[0].id),
+            toAccountId: safeAccs.some(a => String(a.id) === prev.toAccountId && String(a.id) !== prev.fromAccountId) ? prev.toAccountId : String(safeAccs[1].id),
+          }));
+        } else if (safeAccs.length === 1) {
+          setFormData((prev) => ({
+            ...prev,
+            fromAccountId: String(safeAccs[0].id),
+            toAccountId: '',
           }));
         }
       });
@@ -135,12 +142,18 @@ export const TransferModal: React.FC<TransferModalProps> = ({ isOpen, onClose, o
           onChange={(e) => setFormData({ ...formData, note: e.target.value })}
         />
 
+        {accounts.length < 2 && (
+          <p className="text-xs text-amber-700 bg-amber-50 p-2.5 rounded-lg border border-amber-200">
+            You need at least two accounts (e.g. Savings & Wallet) to make an internal fund transfer.
+          </p>
+        )}
+
         {/* Submit Buttons */}
         <div className="flex items-center justify-end space-x-3 pt-3 border-t border-slate-100">
           <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
             Cancel
           </Button>
-          <Button type="submit" variant="primary" isLoading={isLoading}>
+          <Button type="submit" variant="primary" isLoading={isLoading} disabled={accounts.length < 2}>
             Execute Transfer
           </Button>
         </div>

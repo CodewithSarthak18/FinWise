@@ -4,7 +4,8 @@ import { Category, PageResponse, Transaction } from '../types';
 export const transactionsApi = {
   getCategories: async (type?: 'INCOME' | 'EXPENSE'): Promise<Category[]> => {
     const response = await apiClient.get('/categories', { params: { type } });
-    return response.data.data;
+    const result = response.data?.data ?? response.data;
+    return Array.isArray(result) ? result : [];
   },
 
   getTransactions: async (params?: {

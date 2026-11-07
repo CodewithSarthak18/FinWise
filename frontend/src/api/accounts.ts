@@ -4,7 +4,8 @@ import { Account } from '../types';
 export const accountsApi = {
   getAccounts: async (): Promise<Account[]> => {
     const response = await apiClient.get('/accounts');
-    return response.data.data;
+    const result = response.data?.data ?? response.data;
+    return Array.isArray(result) ? result : [];
   },
 
   getAccountById: async (id: number): Promise<Account> => {
