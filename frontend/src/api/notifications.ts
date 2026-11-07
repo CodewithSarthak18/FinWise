@@ -3,13 +3,23 @@ import { InAppNotification } from '../types';
 
 export const notificationsApi = {
   getNotifications: async (limit: number = 20): Promise<InAppNotification[]> => {
-    const response = await apiClient.get('/notifications', { params: { limit } });
-    return response.data.data;
+    try {
+      const response = await apiClient.get('/notifications', { params: { limit } });
+      const data = response.data?.data ?? response.data;
+      return Array.isArray(data) ? data : [];
+    } catch {
+      return [];
+    }
   },
 
   getUnreadCount: async (): Promise<number> => {
-    const response = await apiClient.get('/notifications/unread-count');
-    return response.data.data.count;
+    try {
+      const response = await apiClient.get('/notifications/unread-count');
+      const data = response.data?.data ?? response.data;
+      return typeof data?.count === 'number' ? data.count : 0;
+    } catch {
+      return 0;
+    }
   },
 
   markAsRead: async (id: number): Promise<void> => {

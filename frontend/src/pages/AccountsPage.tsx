@@ -41,9 +41,10 @@ export const AccountsPage: React.FC = () => {
     setIsLoading(true);
     try {
       const data = await accountsApi.getAccounts();
-      setAccounts(data);
+      setAccounts(Array.isArray(data) ? data : []);
     } catch {
       showToast('Error loading accounts', 'error');
+      setAccounts([]);
     } finally {
       setIsLoading(false);
     }

@@ -27,9 +27,9 @@ export const Navbar: React.FC<NavbarProps> = ({
     const fetchNotifications = async () => {
       try {
         const data = await notificationsApi.getNotifications();
-        setNotifications(data);
+        setNotifications(Array.isArray(data) ? data : []);
       } catch {
-        // fallback
+        setNotifications([]);
       }
     };
     fetchNotifications();
@@ -43,16 +43,25 @@ export const Navbar: React.FC<NavbarProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
+  const safeNotifications = Array.isArray(notifications) ? notifications : [];
+  const unreadCount = safeNotifications.filter((n) => !n.isRead).length;
 
   const handleMarkAsRead = async (id: number) => {
-    await notificationsApi.markAsRead(id);
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
+    try {
+      await notificationsApi.markAsRead(id);
+      setNotifications((prev) => (Array.isArray(prev) ? prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)) : []));
+    } catch {
+      // ignore
+    }
   };
 
   const handleMarkAllRead = async () => {
-    await notificationsApi.markAllAsRead();
-    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    try {
+      await notificationsApi.markAllAsRead();
+      setNotifications((prev) => (Array.isArray(prev) ? prev.map((n) => ({ ...n, isRead: true })) : []));
+    } catch {
+      // ignore
+    }
   };
 
   return (
@@ -134,10 +143,10 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
 
               <div className="max-h-80 overflow-y-auto divide-y divide-slate-100">
-                {notifications.length === 0 ? (
+                {safeNotifications.length === 0 ? (
                   <div className="py-6 text-center text-xs text-slate-500">No notifications at this time.</div>
                 ) : (
-                  notifications.map((n) => (
+                  safeNotifications.map((n) => (
                     <div
                       key={n.id}
                       className={`p-3.5 transition-colors flex items-start space-x-3 ${

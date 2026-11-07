@@ -77,11 +77,13 @@ export const TransactionsPage: React.FC = () => {
         size: 15,
         sort: `${sortField},${sortOrder}`,
       });
-      setTransactions(response.content);
-      setTotalPages(response.totalPages);
-      setTotalElements(response.totalElements);
+      const txContent = Array.isArray(response?.content) ? response.content : Array.isArray(response) ? response : [];
+      setTransactions(txContent);
+      setTotalPages(response?.totalPages ?? 1);
+      setTotalElements(response?.totalElements ?? txContent.length);
     } catch {
       showToast('Error loading transactions', 'error');
+      setTransactions([]);
     } finally {
       setIsLoading(false);
     }

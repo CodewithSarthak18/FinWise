@@ -198,7 +198,7 @@ export const BudgetsPage: React.FC = () => {
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {currentBudget.categories.map((cat) => {
+              {Array.isArray(currentBudget.categories) && currentBudget.categories.map((cat) => {
                 const isOverspent = cat.utilizationPercentage >= 100;
                 return (
                   <Card key={cat.categoryId} hoverEffect className="space-y-3">

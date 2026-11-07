@@ -76,16 +76,17 @@ export const AnalyticsPage: React.FC = () => {
           analyticsApi.getSmartInsights(selectedMonth),
         ]);
 
-        setIncome(incRes.totalIncome);
-        setExpense(expRes.totalExpenses);
-        setNetSavings(savRes.netSavings);
-        setSavingsRate(rateRes.savingsRate);
-        setSpendingTrends(trendsRes);
-        setCategoryExpenses(catRes);
-        setIncomeVsExpense(incVsExpRes);
+        setIncome(incRes?.totalIncome ?? '0.00');
+        setExpense(expRes?.totalExpenses ?? '0.00');
+        setNetSavings(savRes?.netSavings ?? '0.00');
+        setSavingsRate(rateRes?.savingsRate ?? 0);
+        setSpendingTrends(Array.isArray(trendsRes) ? trendsRes : []);
+        setCategoryExpenses(Array.isArray(catRes) ? catRes : []);
+        setIncomeVsExpense(Array.isArray(incVsExpRes) ? incVsExpRes : []);
         setNeedsWants(needsWantsRes);
         setHealthScore(healthRes);
-        setInsights(insightsRes.insights);
+        const insList = Array.isArray(insightsRes?.insights) ? insightsRes.insights : Array.isArray(insightsRes) ? insightsRes : [];
+        setInsights(insList);
       } catch (err) {
         console.error('Error fetching analytics:', err);
       } finally {

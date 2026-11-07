@@ -193,7 +193,7 @@ export const WhatIfPage: React.FC = () => {
             </CardHeader>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-              {simulation.presetScenarios.map((scen) => {
+              {Array.isArray(simulation.presetScenarios) && simulation.presetScenarios.map((scen) => {
                 const isSelected = parseFloat(scen.percentage) === reductionPercentage;
                 return (
                   <div

@@ -21,8 +21,37 @@ export const transactionsApi = {
     size?: number;
     sort?: string;
   }): Promise<PageResponse<Transaction>> => {
-    const response = await apiClient.get('/transactions', { params });
-    return response.data.data;
+    try {
+      const response = await apiClient.get('/transactions', { params });
+      const raw = response.data?.data ?? response.data;
+      if (Array.isArray(raw)) {
+        return {
+          content: raw,
+          pageNumber: 0,
+          pageSize: raw.length,
+          totalElements: raw.length,
+          totalPages: 1,
+          isLast: true,
+        };
+      }
+      return {
+        content: Array.isArray(raw?.content) ? raw.content : [],
+        pageNumber: raw?.pageNumber ?? 0,
+        pageSize: raw?.pageSize ?? 10,
+        totalElements: raw?.totalElements ?? 0,
+        totalPages: raw?.totalPages ?? 0,
+        isLast: raw?.isLast ?? raw?.last ?? true,
+      };
+    } catch {
+      return {
+        content: [],
+        pageNumber: 0,
+        pageSize: 10,
+        totalElements: 0,
+        totalPages: 0,
+        isLast: true,
+      };
+    }
   },
 
   getTransactionById: async (id: number): Promise<Transaction> => {

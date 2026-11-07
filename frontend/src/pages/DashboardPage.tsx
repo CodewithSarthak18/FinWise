@@ -157,7 +157,7 @@ export const DashboardPage: React.FC = () => {
       )}
 
       {/* Smart Insight Banner */}
-      {insights.length > 0 && (
+      {Array.isArray(insights) && insights.length > 0 && insights[0] && (
         <div className="p-4 rounded-xl bg-gradient-to-r from-blue-50 via-indigo-50 to-emerald-50 border border-blue-200/80 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="flex items-center space-x-3">
             <div className="p-2 rounded-lg bg-blue-600 text-white shadow-sm flex-shrink-0">
@@ -168,7 +168,7 @@ export const DashboardPage: React.FC = () => {
                 FinWise AI Recommendation
               </span>
               <p className="text-xs sm:text-sm font-semibold text-slate-800">
-                {insights[0].message}
+                {insights[0]?.message || 'Keep monitoring your spending habits.'}
               </p>
             </div>
           </div>

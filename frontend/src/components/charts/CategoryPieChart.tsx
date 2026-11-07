@@ -13,9 +13,10 @@ interface CategoryPieChartProps {
 const DEFAULT_COLORS = ['#EF4444', '#F59E0B', '#F97316', '#3B82F6', '#8B5CF6', '#10B981', '#EC4899', '#6366F1'];
 
 export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({ data }) => {
-  const chartData = data.map((d, index) => ({
-    name: d.categoryName,
-    value: typeof d.totalExpense === 'string' ? parseFloat(d.totalExpense) : d.totalExpense,
+  const safeData = Array.isArray(data) ? data : [];
+  const chartData = safeData.map((d, index) => ({
+    name: d.categoryName || 'Other',
+    value: typeof d.totalExpense === 'string' ? parseFloat(d.totalExpense) || 0 : d.totalExpense || 0,
     color: d.colorCode || DEFAULT_COLORS[index % DEFAULT_COLORS.length],
   }));
 

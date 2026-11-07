@@ -37,24 +37,108 @@ export const App: React.FC = () => {
           <Route
             element={
               <ProtectedRoute>
-                <ErrorBoundary fallbackTitle="Error Loading Dashboard View">
+                <ErrorBoundary fallbackTitle="Application View Error">
                   <AppLayout />
                 </ErrorBoundary>
               </ProtectedRoute>
             }
           >
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/transactions" element={<TransactionsPage />} />
-            <Route path="/accounts" element={<AccountsPage />} />
-            <Route path="/budgets" element={<BudgetsPage />} />
-            <Route path="/goals" element={<SavingsGoalsPage />} />
-            <Route path="/recurring" element={<RecurringPaymentsPage />} />
-            <Route path="/subscriptions" element={<SubscriptionsPage />} />
-            <Route path="/calculator" element={<WhatIfPage />} />
-            <Route path="/analytics" element={<AnalyticsPage />} />
-            <Route path="/reports" element={<ReportsPage />} />
-            <Route path="/calendar" element={<FinancialCalendarPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
+            <Route
+              path="/dashboard"
+              element={
+                <ErrorBoundary fallbackTitle="Error Loading Dashboard View">
+                  <DashboardPage />
+                </ErrorBoundary>
+              }
+            />
+            <Route
+              path="/transactions"
+              element={
+                <ErrorBoundary fallbackTitle="Error Loading Transactions View">
+                  <TransactionsPage />
+                </ErrorBoundary>
+              }
+            />
+            <Route
+              path="/accounts"
+              element={
+                <ErrorBoundary fallbackTitle="Error Loading Accounts View">
+                  <AccountsPage />
+                </ErrorBoundary>
+              }
+            />
+            <Route
+              path="/budgets"
+              element={
+                <ErrorBoundary fallbackTitle="Error Loading Budgets View">
+                  <BudgetsPage />
+                </ErrorBoundary>
+              }
+            />
+            <Route
+              path="/goals"
+              element={
+                <ErrorBoundary fallbackTitle="Error Loading Savings Goals View">
+                  <SavingsGoalsPage />
+                </ErrorBoundary>
+              }
+            />
+            <Route
+              path="/recurring"
+              element={
+                <ErrorBoundary fallbackTitle="Error Loading Recurring Payments View">
+                  <RecurringPaymentsPage />
+                </ErrorBoundary>
+              }
+            />
+            <Route
+              path="/subscriptions"
+              element={
+                <ErrorBoundary fallbackTitle="Error Loading AI Subscriptions View">
+                  <SubscriptionsPage />
+                </ErrorBoundary>
+              }
+            />
+            <Route
+              path="/calculator"
+              element={
+                <ErrorBoundary fallbackTitle="Error Loading What-If Calculator View">
+                  <WhatIfPage />
+                </ErrorBoundary>
+              }
+            />
+            <Route
+              path="/analytics"
+              element={
+                <ErrorBoundary fallbackTitle="Error Loading Analytics View">
+                  <AnalyticsPage />
+                </ErrorBoundary>
+              }
+            />
+            <Route
+              path="/reports"
+              element={
+                <ErrorBoundary fallbackTitle="Error Loading Reports View">
+                  <ReportsPage />
+                </ErrorBoundary>
+              }
+            />
+            <Route
+              path="/calendar"
+              element={
+                <ErrorBoundary fallbackTitle="Error Loading Financial Calendar View">
+                  <FinancialCalendarPage />
+                </ErrorBoundary>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <ErrorBoundary fallbackTitle="Error Loading Settings View">
+                  <SettingsPage />
+                </ErrorBoundary>
+              }
+            />
           </Route>
 
           {/* Catch-All */}

@@ -54,14 +54,14 @@ export const RecurringPaymentsPage: React.FC = () => {
         accountsApi.getAccounts(),
         transactionsApi.getCategories('EXPENSE'),
       ]);
-      setRecurringList(recRes);
-      setUpcoming(upRes);
-      setAccounts(accsRes);
-      setCategories(catsRes);
-      if (accsRes.length > 0 && !createData.accountId) {
+      setRecurringList(Array.isArray(recRes) ? recRes : []);
+      setUpcoming(Array.isArray(upRes) ? upRes : []);
+      setAccounts(Array.isArray(accsRes) ? accsRes : []);
+      setCategories(Array.isArray(catsRes) ? catsRes : []);
+      if (Array.isArray(accsRes) && accsRes.length > 0 && !createData.accountId) {
         setCreateData((prev) => ({ ...prev, accountId: String(accsRes[0].id) }));
       }
-      if (catsRes.length > 0 && !createData.categoryId) {
+      if (Array.isArray(catsRes) && catsRes.length > 0 && !createData.categoryId) {
         setCreateData((prev) => ({ ...prev, categoryId: String(catsRes[0].id) }));
       }
     } catch {

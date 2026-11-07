@@ -3,8 +3,13 @@ import { GoalContribution, SavingsGoal } from '../types';
 
 export const goalsApi = {
   getGoals: async (): Promise<SavingsGoal[]> => {
-    const response = await apiClient.get('/goals');
-    return response.data.data;
+    try {
+      const response = await apiClient.get('/goals');
+      const data = response.data?.data ?? response.data;
+      return Array.isArray(data) ? data : [];
+    } catch {
+      return [];
+    }
   },
 
   getGoalById: async (id: number): Promise<SavingsGoal> => {
@@ -36,8 +41,13 @@ export const goalsApi = {
   },
 
   getGoalContributions: async (id: number): Promise<GoalContribution[]> => {
-    const response = await apiClient.get(`/goals/${id}/contributions`);
-    return response.data.data;
+    try {
+      const response = await apiClient.get(`/goals/${id}/contributions`);
+      const data = response.data?.data ?? response.data;
+      return Array.isArray(data) ? data : [];
+    } catch {
+      return [];
+    }
   },
 
   deleteGoal: async (id: number): Promise<void> => {

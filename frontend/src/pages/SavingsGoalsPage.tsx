@@ -55,10 +55,12 @@ export const SavingsGoalsPage: React.FC = () => {
     setIsLoading(true);
     try {
       const [goalsRes, accsRes] = await Promise.all([goalsApi.getGoals(), accountsApi.getAccounts()]);
-      setGoals(goalsRes);
-      setAccounts(accsRes);
-      if (accsRes.length > 0) {
-        setContributeData((prev) => ({ ...prev, accountId: String(accsRes[0].id) }));
+      const safeGoals = Array.isArray(goalsRes) ? goalsRes : [];
+      const safeAccs = Array.isArray(accsRes) ? accsRes : [];
+      setGoals(safeGoals);
+      setAccounts(safeAccs);
+      if (safeAccs.length > 0) {
+        setContributeData((prev) => ({ ...prev, accountId: String(safeAccs[0].id) }));
       }
     } catch {
       showToast('Error loading savings goals', 'error');

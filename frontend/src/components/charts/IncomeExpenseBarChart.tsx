@@ -20,10 +20,11 @@ interface IncomeExpenseBarChartProps {
 }
 
 export const IncomeExpenseBarChart: React.FC<IncomeExpenseBarChartProps> = ({ data }) => {
-  const chartData = data.map((d) => ({
-    name: d.displayLabel,
-    Income: typeof d.income === 'string' ? parseFloat(d.income) : d.income,
-    Expense: typeof d.expense === 'string' ? parseFloat(d.expense) : d.expense,
+  const safeData = Array.isArray(data) ? data : [];
+  const chartData = safeData.map((d) => ({
+    name: d.displayLabel || '',
+    Income: typeof d.income === 'string' ? parseFloat(d.income) || 0 : d.income || 0,
+    Expense: typeof d.expense === 'string' ? parseFloat(d.expense) || 0 : d.expense || 0,
   }));
 
   return (

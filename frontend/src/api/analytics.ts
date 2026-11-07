@@ -53,23 +53,38 @@ export const analyticsApi = {
   },
 
   getSpendingTrends: async (months: number = 6): Promise<MonthlySpendingTrend[]> => {
-    const response = await apiClient.get('/analytics/spending-trends', { params: { months } });
-    return response.data.data;
+    try {
+      const response = await apiClient.get('/analytics/spending-trends', { params: { months } });
+      const data = response.data?.data ?? response.data;
+      return Array.isArray(data) ? data : [];
+    } catch {
+      return [];
+    }
   },
 
   getCategoryExpenses: async (month?: string): Promise<CategoryExpense[]> => {
-    const response = await apiClient.get('/analytics/category-expenses', { params: { month } });
-    return response.data.data;
+    try {
+      const response = await apiClient.get('/analytics/category-expenses', { params: { month } });
+      const data = response.data?.data ?? response.data;
+      return Array.isArray(data) ? data : [];
+    } catch {
+      return [];
+    }
   },
 
   getIncomeVsExpense: async (months: number = 6): Promise<IncomeVsExpense[]> => {
-    const response = await apiClient.get('/analytics/income-vs-expense', { params: { months } });
-    return response.data.data;
+    try {
+      const response = await apiClient.get('/analytics/income-vs-expense', { params: { months } });
+      const data = response.data?.data ?? response.data;
+      return Array.isArray(data) ? data : [];
+    } catch {
+      return [];
+    }
   },
 
   getNeedsVsWants: async (month?: string): Promise<NeedsWantsBreakdown> => {
     const response = await apiClient.get('/analytics/needs-vs-wants', { params: { month } });
-    return response.data.data;
+    return response.data?.data ?? response.data;
   },
 
   getFinancialHealthScore: async (month?: string): Promise<FinancialHealthScore> => {
@@ -122,7 +137,20 @@ export const analyticsApi = {
   },
 
   getSmartInsights: async (month?: string): Promise<{ insights: SmartInsight[] }> => {
-    const response = await apiClient.get('/analytics/smart-insights', { params: { month } });
-    return response.data.data;
+    try {
+      const response = await apiClient.get('/analytics/smart-insights', { params: { month } });
+      const raw = response.data?.data ?? response.data ?? {};
+      const insightsList = Array.isArray(raw.insights)
+        ? raw.insights
+        : Array.isArray(raw)
+        ? raw
+        : [];
+      return {
+        ...raw,
+        insights: insightsList,
+      };
+    } catch {
+      return { insights: [] };
+    }
   },
 };

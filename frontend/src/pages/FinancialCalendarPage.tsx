@@ -33,8 +33,12 @@ export const FinancialCalendarPage: React.FC = () => {
           recurringApi.getRecurringTransactions(),
           transactionsApi.getTransactions({ size: 50 }),
         ]);
-        setRecurringList(recRes);
-        setTransactions(txRes.content);
+        setRecurringList(Array.isArray(recRes) ? recRes : []);
+        const txList = Array.isArray(txRes?.content) ? txRes.content : Array.isArray(txRes) ? txRes : [];
+        setTransactions(txList);
+      } catch {
+        setRecurringList([]);
+        setTransactions([]);
       } finally {
         setIsLoading(false);
       }

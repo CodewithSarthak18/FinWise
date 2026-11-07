@@ -3,8 +3,13 @@ import { RecurringTransaction, UpcomingReminder } from '../types';
 
 export const recurringApi = {
   getRecurringTransactions: async (): Promise<RecurringTransaction[]> => {
-    const response = await apiClient.get('/recurring');
-    return response.data.data;
+    try {
+      const response = await apiClient.get('/recurring');
+      const data = response.data?.data ?? response.data;
+      return Array.isArray(data) ? data : [];
+    } catch {
+      return [];
+    }
   },
 
   getUpcomingReminders: async (days: number = 7): Promise<UpcomingReminder[]> => {
