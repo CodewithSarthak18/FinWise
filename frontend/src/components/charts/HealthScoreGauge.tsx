@@ -7,14 +7,56 @@ interface HealthScoreGaugeProps {
 }
 
 export const HealthScoreGauge: React.FC<HealthScoreGaugeProps> = ({ scoreData }) => {
-  const { score, ratingGrade, evaluationSummary, components } = scoreData;
+  if (!scoreData) return null;
+
+  const raw = scoreData as any;
+  const score = Number(scoreData.score ?? raw.overallScore ?? 0);
+  const ratingGrade = scoreData.ratingGrade ?? raw.ratingBand ?? 'GOOD';
+  const evaluationSummary = scoreData.evaluationSummary ?? raw.summary ?? '';
+
+  // Extract score components from array or individual component fields
+  const componentsList: Array<{
+    componentName: string;
+    score: number;
+    maxScore: number;
+    feedback: string;
+  }> = [];
+
+  if (Array.isArray(scoreData.components) && scoreData.components.length > 0) {
+    componentsList.push(...scoreData.components);
+  } else {
+    if (raw.savingsRateComponent) {
+      componentsList.push({
+        componentName: raw.savingsRateComponent.name || 'Savings Rate',
+        score: Number(raw.savingsRateComponent.earnedScore ?? 0),
+        maxScore: Number(raw.savingsRateComponent.maxScore ?? 40),
+        feedback: raw.savingsRateComponent.recommendation || raw.savingsRateComponent.evaluation || '',
+      });
+    }
+    if (raw.budgetAdherenceComponent) {
+      componentsList.push({
+        componentName: raw.budgetAdherenceComponent.name || 'Budget Adherence',
+        score: Number(raw.budgetAdherenceComponent.earnedScore ?? 0),
+        maxScore: Number(raw.budgetAdherenceComponent.maxScore ?? 35),
+        feedback: raw.budgetAdherenceComponent.recommendation || raw.budgetAdherenceComponent.evaluation || '',
+      });
+    }
+    if (raw.spendingConsistencyComponent) {
+      componentsList.push({
+        componentName: raw.spendingConsistencyComponent.name || 'Spending Consistency',
+        score: Number(raw.spendingConsistencyComponent.earnedScore ?? 0),
+        maxScore: Number(raw.spendingConsistencyComponent.maxScore ?? 25),
+        feedback: raw.spendingConsistencyComponent.recommendation || raw.spendingConsistencyComponent.evaluation || '',
+      });
+    }
+  }
 
   // SVG Gauge calculations
   const radius = 55;
   const stroke = 10;
   const normalizedRadius = radius - stroke * 2;
   const circumference = normalizedRadius * 2 * Math.PI;
-  const strokeDashoffset = circumference - (score / 100) * circumference;
+  const strokeDashoffset = circumference - (Math.min(100, Math.max(0, score)) / 100) * circumference;
 
   const getScoreColor = (val: number) => {
     if (val >= 80) return '#10B981'; // Emerald
@@ -73,26 +115,31 @@ export const HealthScoreGauge: React.FC<HealthScoreGaugeProps> = ({ scoreData })
         <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
           Score Components Breakdown
         </span>
-        {components.map((comp, idx) => {
-          const pct = Math.round((comp.score / comp.maxScore) * 100);
-          return (
-            <div key={idx} className="space-y-1">
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-medium text-slate-700">{comp.componentName}</span>
-                <span className="font-semibold text-slate-900">
-                  {comp.score} / {comp.maxScore} pts
-                </span>
+        {componentsList.length > 0 ? (
+          componentsList.map((comp, idx) => {
+            const max = comp.maxScore > 0 ? comp.maxScore : 100;
+            const pct = Math.min(100, Math.max(0, Math.round(((comp.score ?? 0) / max) * 100)));
+            return (
+              <div key={idx} className="space-y-1">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-medium text-slate-700">{comp.componentName}</span>
+                  <span className="font-semibold text-slate-900">
+                    {comp.score} / {comp.maxScore} pts
+                  </span>
+                </div>
+                <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-navy-900 rounded-full transition-all duration-500"
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+                <p className="text-[10px] text-slate-500">{comp.feedback}</p>
               </div>
-              <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-navy-900 rounded-full transition-all duration-500"
-                  style={{ width: `${pct}%` }}
-                />
-              </div>
-              <p className="text-[10px] text-slate-500">{comp.feedback}</p>
-            </div>
-          );
-        })}
+            );
+          })
+        ) : (
+          <p className="text-xs text-slate-400 italic">No component metrics available for this period.</p>
+        )}
       </div>
 
       {/* Educational Notice */}

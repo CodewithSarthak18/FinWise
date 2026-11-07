@@ -81,33 +81,34 @@ export const DashboardPage: React.FC = () => {
 
         // 1. Dashboard summary
         if (results[0].status === 'fulfilled') {
-          const sumRes = results[0].value;
-          const inc = parseFloat(sumRes.currentMonthIncome || '0');
-          const exp = parseFloat(sumRes.currentMonthExpense || '0');
+          const sumRes = results[0].value as any;
+          const inc = parseFloat((sumRes.monthlyIncome || sumRes.currentMonthIncome || '0').toString());
+          const exp = parseFloat((sumRes.monthlyExpense || sumRes.currentMonthExpense || '0').toString());
           const savings = inc - exp;
 
           setSummary({
-            netWorth: sumRes.netWorth || '0.00',
-            currentMonthIncome: sumRes.currentMonthIncome || '0.00',
-            currentMonthExpense: sumRes.currentMonthExpense || '0.00',
-            netSavings: savings.toFixed(2),
-            savingsRatePercentage: sumRes.savingsRatePercentage || 0,
+            netWorth: (sumRes.netWorth || '0.00').toString(),
+            currentMonthIncome: inc.toFixed(2),
+            currentMonthExpense: exp.toFixed(2),
+            netSavings: (sumRes.monthlySavings != null ? sumRes.monthlySavings : savings).toString(),
+            savingsRatePercentage: Number(sumRes.savingsRate || sumRes.savingsRatePercentage || 0),
           });
         }
 
         // 2. Income vs Expense
         if (results[1].status === 'fulfilled') {
-          setIncomeVsExpense(results[1].value);
+          setIncomeVsExpense(Array.isArray(results[1].value) ? results[1].value : []);
         }
 
         // 3. Category Expenses
         if (results[2].status === 'fulfilled') {
-          setCategoryExpenses(results[2].value);
+          setCategoryExpenses(Array.isArray(results[2].value) ? results[2].value : []);
         }
 
         // 4. Transactions
         if (results[3].status === 'fulfilled') {
-          setRecentTransactions(results[3].value.content);
+          const txVal = results[3].value as any;
+          setRecentTransactions(Array.isArray(txVal?.content) ? txVal.content : Array.isArray(txVal) ? txVal : []);
         }
 
         // 5. Current Budget
@@ -117,7 +118,7 @@ export const DashboardPage: React.FC = () => {
 
         // 6. Upcoming Reminders
         if (results[5].status === 'fulfilled') {
-          setUpcomingReminders(results[5].value);
+          setUpcomingReminders(Array.isArray(results[5].value) ? results[5].value : []);
         }
 
         // 7. Health Score
@@ -127,7 +128,8 @@ export const DashboardPage: React.FC = () => {
 
         // 8. Smart Insights
         if (results[7].status === 'fulfilled') {
-          setInsights(results[7].value.insights || []);
+          const insVal = results[7].value as any;
+          setInsights(Array.isArray(insVal?.insights) ? insVal.insights : Array.isArray(insVal) ? insVal : []);
         }
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
@@ -209,7 +211,7 @@ export const DashboardPage: React.FC = () => {
         <StatCard
           title="Net Savings"
           value={formatINR(summary.netSavings)}
-          subtitle={`${summary.savingsRatePercentage.toFixed(1)}% savings rate`}
+          subtitle={`${Number(summary.savingsRatePercentage || 0).toFixed(1)}% savings rate`}
           icon={PiggyBank}
           variant="savings"
         />
@@ -301,19 +303,19 @@ export const DashboardPage: React.FC = () => {
                   <span className="font-semibold text-slate-700">Overall Budget Burn Rate</span>
                   <span className="font-bold text-slate-900">
                     {formatINR(currentBudget.totalSpent)} / {formatINR(currentBudget.totalBudgetAmount)} (
-                    {currentBudget.utilizationPercentage.toFixed(1)}%)
+                    {Number(currentBudget.utilizationPercentage || 0).toFixed(1)}%)
                   </span>
                 </div>
                 <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
                   <div
                     className={`h-full rounded-full transition-all duration-500 ${
-                      currentBudget.utilizationPercentage > 100
+                      Number(currentBudget.utilizationPercentage || 0) > 100
                         ? 'bg-rose-600'
-                        : currentBudget.utilizationPercentage > 80
+                        : Number(currentBudget.utilizationPercentage || 0) > 80
                         ? 'bg-amber-500'
                         : 'bg-emerald-500'
                     }`}
-                    style={{ width: `${Math.min(100, currentBudget.utilizationPercentage)}%` }}
+                    style={{ width: `${Math.min(100, Math.max(0, Number(currentBudget.utilizationPercentage || 0)))}%` }}
                   />
                 </div>
                 <div className="flex items-center justify-between text-[11px] text-slate-500 mt-1">
@@ -338,24 +340,24 @@ export const DashboardPage: React.FC = () => {
                 <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
                   Top Category Allocations
                 </span>
-                {currentBudget.categories && currentBudget.categories.slice(0, 3).map((cat) => (
+                {Array.isArray(currentBudget.categories) && currentBudget.categories.slice(0, 3).map((cat) => (
                   <div key={cat.categoryId} className="space-y-1">
                     <div className="flex items-center justify-between text-xs">
                       <span className="font-medium text-slate-700">{cat.categoryName}</span>
                       <span className="font-semibold text-slate-900">
-                        {formatINR(cat.spentAmount)} / {formatINR(cat.allocatedAmount)} ({cat.utilizationPercentage.toFixed(0)}%)
+                        {formatINR(cat.spentAmount)} / {formatINR(cat.allocatedAmount)} ({Number(cat.utilizationPercentage || 0).toFixed(0)}%)
                       </span>
                     </div>
                     <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
                       <div
                         className={`h-full rounded-full ${
-                          cat.utilizationPercentage > 100
+                          Number(cat.utilizationPercentage || 0) > 100
                             ? 'bg-rose-500'
-                            : cat.utilizationPercentage > 80
+                            : Number(cat.utilizationPercentage || 0) > 80
                             ? 'bg-amber-500'
                             : 'bg-blue-500'
                         }`}
-                        style={{ width: `${Math.min(100, cat.utilizationPercentage)}%` }}
+                        style={{ width: `${Math.min(100, Math.max(0, Number(cat.utilizationPercentage || 0)))}%` }}
                       />
                     </div>
                   </div>
@@ -477,12 +479,12 @@ export const DashboardPage: React.FC = () => {
                     <p className="text-xs font-bold text-slate-900">{formatINR(reminder.amount)}</p>
                     <span
                       className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-bold mt-0.5 ${
-                        reminder.daysRemaining <= 3
+                        Number(reminder.daysRemaining ?? (reminder as any).daysUntilDue ?? 0) <= 3
                           ? 'bg-rose-100 text-rose-700'
                           : 'bg-blue-100 text-blue-700'
                       }`}
                     >
-                      in {reminder.daysRemaining} days
+                      in {Number(reminder.daysRemaining ?? (reminder as any).daysUntilDue ?? 0)} days
                     </span>
                   </div>
                 </div>

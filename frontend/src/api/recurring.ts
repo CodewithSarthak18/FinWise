@@ -9,7 +9,14 @@ export const recurringApi = {
 
   getUpcomingReminders: async (days: number = 7): Promise<UpcomingReminder[]> => {
     const response = await apiClient.get('/recurring/upcoming', { params: { days } });
-    return response.data.data;
+    const data = response.data?.data || response.data || [];
+    if (!Array.isArray(data)) return [];
+    return data.map((rem: any) => ({
+      ...rem,
+      nextExecutionDate: rem.nextExecutionDate || rem.dueDate,
+      daysRemaining: Number(rem.daysRemaining ?? rem.daysUntilDue ?? 0),
+      amount: (rem.amount ?? '0.00').toString(),
+    }));
   },
 
   createRecurring: async (data: {

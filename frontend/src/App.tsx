@@ -4,6 +4,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
 import { ProtectedRoute } from './components/layout/ProtectedRoute';
 import { AppLayout } from './components/layout/AppLayout';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
 
 // Pages
 import { LandingPage } from './pages/LandingPage';
@@ -36,7 +37,9 @@ export const App: React.FC = () => {
           <Route
             element={
               <ProtectedRoute>
-                <AppLayout />
+                <ErrorBoundary fallbackTitle="Error Loading Dashboard View">
+                  <AppLayout />
+                </ErrorBoundary>
               </ProtectedRoute>
             }
           >

@@ -214,7 +214,7 @@ export interface ScoreComponent {
   componentName: string;
   score: number;
   maxScore: number;
-  status: string;
+  status?: string;
   feedback: string;
 }
 
