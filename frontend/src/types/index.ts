@@ -251,12 +251,20 @@ export interface DetectedSubscription {
   subscriptionName: string;
   averagePayment: string;
   frequency: string;
+  frequencyLabel?: string;
   estimatedAnnualCost: string;
   lastPaymentDate: string;
+  suggestedNextPaymentDate?: string;
   occurrences: number;
+  occurrenceCount?: number;
   confidenceScore: number;
   status: string;
   isSuggestion: boolean;
+  accountId?: number;
+  accountName?: string;
+  categoryId?: number;
+  categoryName?: string;
+  transactionDescriptions?: string[];
 }
 
 export interface WhatIfPresetScenario {
