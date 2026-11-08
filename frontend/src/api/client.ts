@@ -1,13 +1,24 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api/v1';
+const resolveApiBaseUrl = (): string => {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  // When running on Vercel preview/production without custom proxy, point to live Render backend
+  if (typeof window !== 'undefined' && window.location.hostname.endsWith('.vercel.app')) {
+    return 'https://finwise-ivue.onrender.com/api/v1';
+  }
+  return '/api/v1';
+};
+
+const API_BASE_URL = resolveApiBaseUrl();
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 30000,
+  timeout: 60000,
 });
 
 let isRefreshing = false;

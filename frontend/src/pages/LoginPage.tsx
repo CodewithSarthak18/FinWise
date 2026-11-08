@@ -29,9 +29,15 @@ export const LoginPage: React.FC = () => {
       let serverMsg = err?.response?.data?.message;
       if (!serverMsg) {
         if (err?.code === 'ECONNABORTED' || err?.message?.includes('timeout')) {
-          serverMsg = 'Connection timed out. The server might be waking up—please try again in a few moments.';
+          serverMsg = 'Connection timed out. The backend server might be waking up from sleep (Render free tier takes ~60s to boot). Please wait a moment and try again.';
+        } else if (err?.message === 'Network Error' || !err?.response) {
+          serverMsg = 'Backend server is unreachable or CORS blocked. Please verify the backend service is running on Render.';
+        } else if (err?.response?.status === 404) {
+          serverMsg = 'API endpoint not found (404). If deployed on Vercel, configure VITE_API_URL to point to your backend.';
+        } else if (err?.response?.status === 401 || err?.response?.status === 400) {
+          serverMsg = 'Invalid email or password. Please verify credentials or click "Autofill Seed Data" below.';
         } else {
-          serverMsg = 'Invalid email or password. Please try again.';
+          serverMsg = err?.message || 'Login failed. Please try again.';
         }
       }
       setError(serverMsg);

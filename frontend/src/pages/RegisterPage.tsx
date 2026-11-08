@@ -56,7 +56,9 @@ export const RegisterPage: React.FC = () => {
       }
       if (!errorMsg) {
         if (err?.code === 'ECONNABORTED' || err?.message?.includes('timeout')) {
-          errorMsg = 'Request timed out due to high network latency. Your account may have already been created—please try signing in.';
+          errorMsg = 'Request timed out. The backend server might be waking up from sleep—please try again in 30 seconds.';
+        } else if (err?.message === 'Network Error' || !err?.response) {
+          errorMsg = 'Backend server is unreachable or CORS blocked. Please verify the backend service is running on Render.';
         } else {
           errorMsg = err?.message || 'Registration failed. Please check your inputs.';
         }
