@@ -105,6 +105,8 @@ public class SecurityConfig {
                                 "/accounts",
                                 "/subscriptions",
                                 "/what-if",
+                                "/api/v1",
+                                "/api/v1/",
                                 "/api/v1/auth/**",
                                 "/api/v1/health",
                                 "/actuator/**",

@@ -230,7 +230,7 @@ export const DashboardPage: React.FC = () => {
               Deep Dive <ArrowRight className="w-3.5 h-3.5 ml-1" />
             </Link>
           </CardHeader>
-          {incomeVsExpense.length > 0 ? (
+          {Array.isArray(incomeVsExpense) && incomeVsExpense.length > 0 ? (
             <IncomeExpenseBarChart data={incomeVsExpense} />
           ) : (
             <EmptyState
@@ -248,7 +248,7 @@ export const DashboardPage: React.FC = () => {
               <p className="text-xs text-slate-500 mt-0.5">Distribution for Current Month</p>
             </div>
           </CardHeader>
-          {categoryExpenses.length > 0 ? (
+          {Array.isArray(categoryExpenses) && categoryExpenses.length > 0 ? (
             <CategoryPieChart data={categoryExpenses} />
           ) : (
             <EmptyState
@@ -389,7 +389,7 @@ export const DashboardPage: React.FC = () => {
             </Link>
           </CardHeader>
 
-          {recentTransactions.length === 0 ? (
+          {!Array.isArray(recentTransactions) || recentTransactions.length === 0 ? (
             <EmptyState
               icon={Receipt}
               title="No Transactions Recorded"
@@ -408,7 +408,7 @@ export const DashboardPage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {recentTransactions.map((tx) => {
+                  {(Array.isArray(recentTransactions) ? recentTransactions : []).map((tx) => {
                     const isIncome = tx.transactionType === 'INCOME';
                     return (
                       <tr key={tx.id} className="hover:bg-slate-50/80 transition-colors">
@@ -453,7 +453,7 @@ export const DashboardPage: React.FC = () => {
             </Link>
           </CardHeader>
 
-          {upcomingReminders.length === 0 ? (
+          {!Array.isArray(upcomingReminders) || upcomingReminders.length === 0 ? (
             <EmptyState
               icon={Calendar}
               title="No Bills Due"
@@ -461,7 +461,7 @@ export const DashboardPage: React.FC = () => {
             />
           ) : (
             <div className="space-y-3">
-              {upcomingReminders.map((reminder) => (
+              {(Array.isArray(upcomingReminders) ? upcomingReminders : []).map((reminder) => (
                 <div
                   key={reminder.id}
                   className="p-3 rounded-xl bg-slate-50 border border-slate-200/70 flex items-center justify-between hover:bg-slate-100/70 transition-colors"

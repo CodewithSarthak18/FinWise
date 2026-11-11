@@ -29,6 +29,17 @@ public class SpaForwardController {
         ));
     }
 
+    @GetMapping(value = {"/api/v1", "/api/v1/"})
+    public ResponseEntity<Map<String, Object>> handleApiRoot() {
+        return ResponseEntity.ok(Map.of(
+                "application", "FinWise Personal Finance Backend API",
+                "version", "1.0.0",
+                "status", "UP",
+                "healthCheckUrl", "/api/v1/health",
+                "documentation", "/swagger-ui.html"
+        ));
+    }
+
     @GetMapping(value = {
             "/login",
             "/register",

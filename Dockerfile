@@ -49,12 +49,13 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=45s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health/readiness || exit 1
 
-# Optimized JVM memory and GC flags for container environments
+# Optimized JVM memory and GC flags for container environments (tuned for 512MB RAM free-tier PaaS)
 ENTRYPOINT ["java", \
   "-XX:+UseContainerSupport", \
-  "-XX:MaxRAMPercentage=75.0", \
-  "-XX:InitialRAMPercentage=40.0", \
-  "-XX:+UseG1GC", \
+  "-XX:+UseSerialGC", \
+  "-Xms128m", \
+  "-Xmx340m", \
+  "-XX:MaxMetaspaceSize=128m", \
   "-XX:+ExitOnOutOfMemoryError", \
   "-Djava.security.egd=file:/dev/./urandom", \
   "-Dspring.profiles.active=prod", \
