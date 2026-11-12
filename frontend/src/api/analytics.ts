@@ -65,8 +65,23 @@ export const analyticsApi = {
   getCategoryExpenses: async (month?: string): Promise<CategoryExpense[]> => {
     try {
       const response = await apiClient.get('/analytics/category-expenses', { params: { month } });
-      const data = response.data?.data ?? response.data;
-      return Array.isArray(data) ? data : [];
+      const raw = response.data?.data ?? response.data;
+      if (!Array.isArray(raw)) return [];
+      return raw.map((item: any) => {
+        const val = (item.amount ?? item.totalExpense ?? item.value ?? 0).toString();
+        const pct = Number(item.percentage ?? item.percentageShare ?? 0);
+        return {
+          categoryId: item.categoryId ?? 0,
+          categoryName: item.categoryName || 'Uncategorized',
+          amount: val,
+          totalExpense: val,
+          percentage: pct,
+          percentageShare: pct,
+          colorCode: item.colorCode || '#3B82F6',
+          icon: item.icon,
+          transactionCount: Number(item.transactionCount ?? 0),
+        };
+      });
     } catch {
       return [];
     }

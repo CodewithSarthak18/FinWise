@@ -247,6 +247,9 @@ export const DashboardPage: React.FC = () => {
               <CardTitle>Category Expenses</CardTitle>
               <p className="text-xs text-slate-500 mt-0.5">Distribution for Current Month</p>
             </div>
+            <Link to="/analytics" className="text-xs font-semibold text-blue-600 hover:text-blue-800 flex items-center">
+              Deep Dive <ArrowRight className="w-3.5 h-3.5 ml-1" />
+            </Link>
           </CardHeader>
           {Array.isArray(categoryExpenses) && categoryExpenses.length > 0 ? (
             <CategoryPieChart data={categoryExpenses} />

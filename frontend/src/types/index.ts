@@ -185,9 +185,13 @@ export interface MonthlySpendingTrend {
 export interface CategoryExpense {
   categoryId: number;
   categoryName: string;
+  amount?: string | number;
   totalExpense: string;
+  percentage?: number;
   percentageShare: number;
   colorCode: string;
+  icon?: string;
+  transactionCount?: number;
 }
 
 export interface IncomeVsExpense {

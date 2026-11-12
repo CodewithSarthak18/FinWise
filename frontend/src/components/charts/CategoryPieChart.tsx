@@ -4,8 +4,11 @@ import { formatINR } from '../../utils/formatters';
 
 interface CategoryPieChartProps {
   data: Array<{
-    categoryName: string;
-    totalExpense: string | number;
+    categoryName?: string;
+    name?: string;
+    totalExpense?: string | number;
+    amount?: string | number;
+    value?: string | number;
     colorCode?: string;
   }>;
 }
@@ -14,13 +17,26 @@ const DEFAULT_COLORS = ['#EF4444', '#F59E0B', '#F97316', '#3B82F6', '#8B5CF6', '
 
 export const CategoryPieChart: React.FC<CategoryPieChartProps> = ({ data }) => {
   const safeData = Array.isArray(data) ? data : [];
-  const chartData = safeData.map((d, index) => ({
-    name: d.categoryName || 'Other',
-    value: typeof d.totalExpense === 'string' ? parseFloat(d.totalExpense) || 0 : d.totalExpense || 0,
-    color: d.colorCode || DEFAULT_COLORS[index % DEFAULT_COLORS.length],
-  }));
+  const chartData = safeData.map((d: any, index) => {
+    const rawVal = d.amount ?? d.totalExpense ?? d.value ?? 0;
+    const numVal = typeof rawVal === 'string' ? parseFloat(rawVal) || 0 : Number(rawVal) || 0;
+    return {
+      name: d.categoryName || d.name || 'Other',
+      value: Math.max(0, numVal),
+      color: d.colorCode || DEFAULT_COLORS[index % DEFAULT_COLORS.length],
+    };
+  });
 
   const total = chartData.reduce((sum, item) => sum + item.value, 0);
+
+  if (chartData.length === 0 || total === 0) {
+    return (
+      <div className="w-full py-12 flex flex-col items-center justify-center text-center text-slate-400">
+        <p className="text-xs font-semibold text-slate-600">No category expenses recorded</p>
+        <p className="text-[11px] text-slate-400 mt-1">Expenses logged in this month will display here automatically.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full flex flex-col md:flex-row items-center justify-between gap-4">

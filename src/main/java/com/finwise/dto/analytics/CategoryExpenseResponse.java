@@ -20,4 +20,13 @@ public class CategoryExpenseResponse {
     private BigDecimal amount;
     private double percentage;
     private long transactionCount;
+
+    // Backward and frontend compatibility aliases
+    public BigDecimal getTotalExpense() {
+        return amount;
+    }
+
+    public double getPercentageShare() {
+        return percentage;
+    }
 }
